@@ -12,7 +12,7 @@
 #  limitations under the License.
 
 #Project Options
-PROJECT_ID=smart-spark-93622
+PROJECT_ID=YOUR_PROJECT_ID_HERE
 
 #Cluster Details
 NUM_MANAGERS=1 #Need at least one manager
