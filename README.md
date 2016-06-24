@@ -8,15 +8,15 @@ Scripts to create and manage a Docker Swarm cluster on Google Cloud Platform
 ### Before you start
 Make sure you create a [Google Cloud Project](http://console.cloud.google.com/project)
 
-Login: ```gcloud init```
+Login: `gcloud init`
 
 ### Create a Cluster
-   ```./swarm-up.sh```
+   `./swarm-up.sh`
    
    By default, this will create a cluster with one manager and two workers. You can edit this and more options in the [options.sh](options.sh) file.
 ### Delete a Cluster
-   ```./swarm-down.sh```
-   
+   `./swarm-down.sh`
+
 ### Options
 Edit the [options.sh](options.sh) file to specify your options.
 - `PROJECT_ID`= **REQUIRED** - The Google Cloud Project ID
