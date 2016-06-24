@@ -70,8 +70,8 @@ echo "Adding Workers(s)"
 
 for i in `seq 1 $NUM_WORKERS`
 do
-    eval $(docker-machine env $PREFIX-worker-$i)
-    docker swarm join $SWARM_MANAGER_INTERNAL_IP:2377 --secret $SWARM_SECRET
+    eval $(docker-machine env $PREFIX-worker-$i) && \
+    docker swarm join $SWARM_MANAGER_INTERNAL_IP:2377 --secret $SWARM_SECRET &
 done
 
 echo "Swarm Created!"
