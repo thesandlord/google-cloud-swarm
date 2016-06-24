@@ -73,6 +73,7 @@ do
     eval $(docker-machine env $PREFIX-worker-$i) && \
     docker swarm join $SWARM_MANAGER_INTERNAL_IP:2377 --secret $SWARM_SECRET &
 done
+wait
 
 echo "Swarm Created!"
 echo "eval $(docker-machine env $PREFIX-manager-1)"
