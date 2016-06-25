@@ -62,8 +62,8 @@ echo "Adding Manager(s)"
 
 for i in `seq 2 $NUM_MANAGERS`
 do
-    eval $(docker-machine env $PREFIX-manager-$i)
-    docker swarm join $SWARM_MANAGER_INTERNAL_IP:2377
+    eval $(docker-machine env $PREFIX-manager-$i) && \
+    docker swarm join $SWARM_MANAGER_INTERNAL_IP:2377 --secret $SWARM_SECRET &
 done
 
 echo "Adding Workers(s)"
