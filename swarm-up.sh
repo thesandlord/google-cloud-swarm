@@ -51,7 +51,7 @@ echo "Instance(s) Created"
 
 SWARM_MANAGER_INTERNAL_IP=$(gcloud compute instances describe $PREFIX-manager-1 --zone $MANAGER_ZONE --format=text | grep '^networkInterfaces\[[0-9]\+\]\.networkIP:' | sed 's/^.* //g')
 
-echo $MANAGER_IP
+echo $SWARM_MANAGER_INTERNAL_IP
 
 echo "Creating Swarm"
 eval $(docker-machine env $PREFIX-manager-1)
