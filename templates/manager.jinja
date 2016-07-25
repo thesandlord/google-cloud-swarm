@@ -1,0 +1,61 @@
+{#
+Copyright 2016 Google Inc. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+#}
+
+resources:
+- name: {{ properties["prefix"] }}-manager
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: https://www.googleapis.com/compute/v1/projects/{{ env["project"] }}/zones/{{ properties["zone"] }}/machineTypes/{{ properties["machine_type"] }}
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        diskSizeGb: {{ properties["disk"] }}
+        sourceImage: projects/ubuntu-os-cloud/global/images/ubuntu-1604-xenial-v20160610
+    tags:
+      items:
+      - docker-machine
+    networkInterfaces:
+    - network: global/networks/default
+      accessConfigs:
+      - name: External-IP
+        type: ONE_TO_ONE_NAT
+    serviceAccounts: 
+    - email: "default"
+      scopes: 
+        - "https://www.googleapis.com/auth/devstorage.read_only"
+        - "https://www.googleapis.com/auth/logging.write"
+        - "https://www.googleapis.com/auth/monitoring.write"
+        - "https://www.googleapis.com/auth/servicecontrol"
+        - "https://www.googleapis.com/auth/service.management.readonly"
+        - "https://www.googleapis.com/auth/compute"
+    metadata:
+      items:
+      - key: docker-install-status
+        value: pending
+      - key: startup-script
+        value: |
+          sudo aptitude -y install software-properties-common apt-transport-https curl
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F76221572C52609D
+          sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+          curl -sSL https://get.docker.com/gpg | sudo apt-key add -
+          curl -sSL https://apt.dockerproject.org/gpg | sudo apt-key add - 
+          echo 'deb [arch=amd64] https://apt.dockerproject.org/repo ubuntu-xenial testing' | sudo tee /etc/apt/sources.list.d/docker.list
+          sudo apt-get update && sudo apt-get -y install linux-image-extra-$(uname -r) && sudo apt-get -y install docker-engine
+          sudo systemctl start docker
+          docker swarm init --secret {{ properties["swarm_secret"] }}
+          yes y | gcloud compute instances add-metadata $(hostname) --metadata docker-install-status=finished --zone {{ properties["zone"] }}

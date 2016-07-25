@@ -11,25 +11,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-#Project Options
-PROJECT_ID=YOUR_PROJECT_ID_HERE
+# get cluster info from options.yaml
+PREFIX=$(awk '{for(i=1;i<=NF;i++) if ($i=="prefix:") print $(i+1)}' options.yaml)
+ZONE=$(awk '{for(i=1;i<=NF;i++) if ($i=="zone:") print $(i+1)}' options.yaml)
+PROJECT_ID=$(gcloud config list project | awk 'FNR ==2 { print $3 }')
 
-#Cluster Details
-NUM_MANAGERS=1 #Need at least one manager
-NUM_WORKERS=2
-SWARM_SECRET="somestring"
-PREFIX=my-swarm
+echo "Resizing Swarm Deplyoment"
 
-#Machine Options (Worker)
-WORKER_MACHINE_TYPE=n1-standard-1
-WORKER_ZONE=us-central1-f
-WORKER_DISK=100
+gcloud compute instance-groups managed resize $PREFIX-igm --size $1 --zone $ZONE
 
-#Machine Options (Manager)
-MANAGER_MACHINE_TYPE=n1-standard-1
-MANAGER_ZONE=us-central1-f
-MANAGER_DISK=100
-
-#Advanced Settings
-ENGINE_INSTALL_URL=experimental.docker.com
-TAGS=swarm-cluster
+echo "Cluster Resized - please wait a minute for new nodes to register or delete"

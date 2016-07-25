@@ -11,17 +11,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# get cluster info from options.yaml
-PREFIX=$(awk '{for(i=1;i<=NF;i++) if ($i=="prefix:") print $(i+1)}' options.yaml)
-ZONE=$(awk '{for(i=1;i<=NF;i++) if ($i=="zone:") print $(i+1)}' options.yaml)
-PROJECT_ID=$(gcloud config list project | awk 'FNR ==2 { print $3 }')
+#Project Options
+PROJECT_ID=<YOUR-PROJECT_ID>
 
-echo "Deleting Swarm Deplyoment"
+#Cluster Details
+NUM_MANAGERS=1 #Need at least one manager
+NUM_WORKERS=2
+SWARM_SECRET="somestring"
+PREFIX=my-swarm
 
-yes y | gcloud deployment-manager deployments delete $PREFIX-swarm-cluster
+#Machine Options (Worker)
+WORKER_MACHINE_TYPE=n1-standard-1
+WORKER_ZONE=us-central1-f
+WORKER_DISK=100
 
-echo "Deleting Manager from docker-machine"
+#Machine Options (Manager)
+MANAGER_MACHINE_TYPE=n1-standard-1
+MANAGER_ZONE=us-central1-f
+MANAGER_DISK=100
 
-docker-machine rm -f $PREFIX-manager
-
-echo "Cluster Deleted"
+#Advanced Settings
+ENGINE_INSTALL_URL=experimental.docker.com
+TAGS=swarm-cluster

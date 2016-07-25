@@ -11,17 +11,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# get cluster info from options.yaml
-PREFIX=$(awk '{for(i=1;i<=NF;i++) if ($i=="prefix:") print $(i+1)}' options.yaml)
-ZONE=$(awk '{for(i=1;i<=NF;i++) if ($i=="zone:") print $(i+1)}' options.yaml)
-PROJECT_ID=$(gcloud config list project | awk 'FNR ==2 { print $3 }')
+imports:
+- path: templates/deployment.jinja
+- path: templates/manager.jinja
+- path: templates/worker.jinja
+resources:
+- name: swarm-cluster
+  type: templates/deployment.jinja
+  properties:
 
-echo "Deleting Swarm Deplyoment"
+    #Cluster Config
+    swarm_secret: "somestring"
+    prefix: my-swarm
+    zone: us-central1-f
 
-yes y | gcloud deployment-manager deployments delete $PREFIX-swarm-cluster
+    #Manager Config
+    manager_machine_type: n1-standard-1
+    manager_disk: 100
 
-echo "Deleting Manager from docker-machine"
-
-docker-machine rm -f $PREFIX-manager
-
-echo "Cluster Deleted"
+    #Worker Config
+    num: 2
+    worker_machine_type: n1-standard-1
+    worker_disk: 100

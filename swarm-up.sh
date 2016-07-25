@@ -11,68 +11,34 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# include options.sh for all the variables
-source ./options.sh
-
-echo "Creating Manager(s)"
-
-for i in `seq 1 $NUM_MANAGERS`
-do
-    docker-machine rm -f $PREFIX-manager-$i && \
-    docker-machine create $PREFIX-manager-$i \
-        --engine-install-url $ENGINE_INSTALL_URL \
-        -d google \
-        --google-machine-type $MANAGER_MACHINE_TYPE \
-        --google-zone $MANAGER_ZONE \
-        --google-disk-size $MANAGER_DISK \
-        --google-tags $TAGS \
-        --google-project $PROJECT_ID &
-done
-
-echo "Creating Workers(s)"
-
-for i in `seq 1 $NUM_WORKERS`
-do
-    docker-machine rm -f $PREFIX-worker-$i && \
-    docker-machine create $PREFIX-worker-$i \
-        --engine-install-url $ENGINE_INSTALL_URL \
-        -d google \
-        --google-machine-type $WORKER_MACHINE_TYPE \
-        --google-zone $WORKER_ZONE \
-        --google-disk-size $WORKER_DISK \
-        --google-tags $TAGS \
-        --google-project $PROJECT_ID &
-done
-
-echo "Waiting for Instance(s) to Start"
-wait
-
-echo "Instance(s) Created"
-
-SWARM_MANAGER_INTERNAL_IP=$(gcloud compute instances describe $PREFIX-manager-1 --zone $MANAGER_ZONE --format=text | grep '^networkInterfaces\[[0-9]\+\]\.networkIP:' | sed 's/^.* //g')
-
-echo $MANAGER_IP
+# get cluster info from options.yaml
+PREFIX=$(awk '{for(i=1;i<=NF;i++) if ($i=="prefix:") print $(i+1)}' options.yaml)
+ZONE=$(awk '{for(i=1;i<=NF;i++) if ($i=="zone:") print $(i+1)}' options.yaml)
+PROJECT_ID=$(gcloud config list project | awk 'FNR ==2 { print $3 }')
 
 echo "Creating Swarm"
-eval $(docker-machine env $PREFIX-manager-1)
 
-docker swarm init --secret $SWARM_SECRET
+gcloud deployment-manager deployments create $PREFIX-swarm-cluster --config options.yaml
 
-echo "Adding Manager(s)"
+echo "Installing Docker"
 
-for i in `seq 2 $NUM_MANAGERS`
+# Use GCE Metadata to know when the startup script is complete
+STATUS=$(gcloud compute instances describe $PREFIX-manager --zone $ZONE | awk '/docker-install-status/{getline;print $2;}' | awk 'FNR ==1 {print $1}')
+while [ "$STATUS" = "pending" ]
 do
-    eval $(docker-machine env $PREFIX-manager-$i)
-    docker swarm join $SWARM_MANAGER_INTERNAL_IP:2377
+  echo $STATUS
+  sleep 2
+  STATUS=$(gcloud compute instances describe $PREFIX-manager --zone $ZONE | awk '/docker-install-status/{getline;print $2;}' | awk 'FNR ==1 {print $1}')
 done
+echo $STATUS
 
-echo "Adding Workers(s)"
+echo "Adding Manager to docker-machine"
 
-for i in `seq 1 $NUM_WORKERS`
-do
-    eval $(docker-machine env $PREFIX-worker-$i) && \
-    docker swarm join $SWARM_MANAGER_INTERNAL_IP:2377 --secret $SWARM_SECRET &
-done
+docker-machine rm -f $PREFIX-manager
+docker-machine create $PREFIX-manager -d google \
+  --google-zone $ZONE \
+  --google-project $PROJECT_ID \
+  --google-use-existing
 
 echo "Swarm Created!"
-echo "eval $(docker-machine env $PREFIX-manager-1)"
+echo "eval $(docker-machine env $PREFIX-manager)"

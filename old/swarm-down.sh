@@ -11,17 +11,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# get cluster info from options.yaml
-PREFIX=$(awk '{for(i=1;i<=NF;i++) if ($i=="prefix:") print $(i+1)}' options.yaml)
-ZONE=$(awk '{for(i=1;i<=NF;i++) if ($i=="zone:") print $(i+1)}' options.yaml)
-PROJECT_ID=$(gcloud config list project | awk 'FNR ==2 { print $3 }')
+# include options.sh for all the variables
+source ./options.sh
 
-echo "Deleting Swarm Deplyoment"
+echo "Deleting Manager(s)"
 
-yes y | gcloud deployment-manager deployments delete $PREFIX-swarm-cluster
+for i in `seq 1 $NUM_MANAGERS`
+do
+    docker-machine rm -f $PREFIX-manager-$i &
+done
 
-echo "Deleting Manager from docker-machine"
+echo "Deleting Workers(s)"
 
-docker-machine rm -f $PREFIX-manager
+for i in `seq 1 $NUM_WORKERS`
+do
+    docker-machine rm -f $PREFIX-worker-$i &
+done
 
+wait
 echo "Cluster Deleted"
