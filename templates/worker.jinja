@@ -59,13 +59,15 @@ resources:
           value: |
             sleep 15
             MANAGER_IP=$(curl -H 'Metadata-Flavor: Google' http://metadata/computeMetadata/v1/instance/attributes/manager-ip)
+            PREFIX={{ properties["prefix"] }}
             sudo aptitude -y install software-properties-common apt-transport-https curl
             sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
             sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F76221572C52609D
             sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
             curl -sSL https://get.docker.com/gpg | sudo apt-key add -
             curl -sSL https://apt.dockerproject.org/gpg | sudo apt-key add - 
-            echo 'deb [arch=amd64] https://apt.dockerproject.org/repo ubuntu-xenial testing' | sudo tee /etc/apt/sources.list.d/docker.list
+            echo 'deb [arch=amd64] https://apt.dockerproject.org/repo ubuntu-xenial main' | sudo tee /etc/apt/sources.list.d/docker.list
             sudo apt-get update && sudo apt-get -y install linux-image-extra-$(uname -r) && sudo apt-get -y install docker-engine
             sudo systemctl start docker
-            sudo docker swarm join $MANAGER_IP:2377 --secret {{ properties["swarm_secret"] }}
+            SWARM_TOKEN=$(curl -H 'Metadata-Flavor: Google' http://metadata/computeMetadata/v1/project/attributes/"$PREFIX"-swarm-worker-token)
+            sudo docker swarm join --token $SWARM_TOKEN $MANAGER_IP:2377

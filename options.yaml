@@ -21,7 +21,6 @@ resources:
   properties:
 
     #Cluster Config
-    swarm_secret: "somestring"
     prefix: my-swarm
     zone: us-central1-f
 

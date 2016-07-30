@@ -20,6 +20,10 @@ echo "Deleting Swarm Deplyoment"
 
 yes y | gcloud deployment-manager deployments delete $PREFIX-swarm-cluster
 
+echo 'Deleting Tokens'
+
+gcloud compute project-info remove-metadata --keys $PREFIX-swarm-worker-token,$PREFIX-swarm-manager-token
+
 echo "Deleting Manager from docker-machine"
 
 docker-machine rm -f $PREFIX-manager
