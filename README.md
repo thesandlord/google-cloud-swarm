@@ -28,7 +28,6 @@ Edit the [options.yaml](options.yaml) file to specify your options.
 ## Cluster Config
 
 - Cluster Configuration Options
-  - `swarm_secret` = The secret required to join the Cluster
   - `prefix` = All nodes in the Swarm will start with this Prefix. This allows you to have multiple Swarms in the same project.
   - `zone` = [Google Cloud Zone](https://cloud.google.com/compute/docs/regions-zones/regions-zones) for the nodes - *default: us-central1-f*
 - Manager Options
